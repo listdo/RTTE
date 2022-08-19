@@ -1,4 +1,7 @@
 import praw, enchant, pymongo, logging
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 from datetime import datetime, timedelta
 from cleantext import clean
 
@@ -52,17 +55,35 @@ if __name__ == '__main__':
         gen = (x for x in words if not (not (3 <= len(x) <= 5) or not str.isupper(x) or contains_number(
             x) or not contains_only_valid_special(x)) and not is_a_normal_word(x) and not is_keyword(x))
 
+        inserted = False
+
         for word in gen:
             normalized_word = word.replace("$", "")
 
             existing = my_col.find_one({"postid": submission.id, "name": normalized_word})
 
             if not existing:
+
+                date = datetime.fromtimestamp(submission.created).strftime('%d/%m/%Y')
+
                 insert_dict = dict(postid=submission.id, name=normalized_word,
                                    title=clean(submission.title, no_emoji=True),
-                                   timestamp=datetime.fromtimestamp(submission.created))
+                                   timestamp=date)
                 result = my_col.insert_one(insert_dict)
                 logging.info(insert_dict)
 
+                inserted = True
+
             else:
                 logging.info('= DO NOT INSERT ALREADY INSERTED =')
+
+        if inserted:
+            # Simple visualisation with seaborn
+            plt.close()
+            result = [x for x in my_col.find({})]
+
+            df = pd.DataFrame(result)
+            ax = sns.histplot(x="timestamp", hue="name", data=df, multiple="stack")
+            plt.show()
+            # End of visualization
+
