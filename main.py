@@ -1,8 +1,8 @@
 import praw, enchant, pymongo, logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from cleantext import clean
 
-
+# just some helper functions to filter none ticker related keywords wsb-people use
 def contains_number(value):
     for character in value:
         if character.isdigit():
@@ -58,7 +58,9 @@ if __name__ == '__main__':
             existing = my_col.find_one({"postid": submission.id, "name": normalized_word})
 
             if not existing:
-                insert_dict = {"postid": submission.id, "name": normalized_word, "title": clean(submission.title, no_emoji=True), "timestamp": datetime.fromtimestamp(submission.created)}
+                insert_dict = dict(postid=submission.id, name=normalized_word,
+                                   title=clean(submission.title, no_emoji=True),
+                                   timestamp=datetime.fromtimestamp(submission.created))
                 result = my_col.insert_one(insert_dict)
                 logging.info(insert_dict)
 
