@@ -30,7 +30,7 @@ def is_a_normal_word(value):
 
 
 def is_keyword(value):
-    keywords = {"WSB", "YOLO", "BEEP", "BOOP", "HODLL", "HODL"}
+    keywords = {"WSB", "YOLO", "BEEP", "BOOP", "HODLL", "HODL", "FOMO"}
 
     return value in keywords
 
@@ -48,6 +48,7 @@ def find_performance_for_ticker(value):
         return dict(open=open_price, close=close_price)
     except:
         logging.error(f'Error finding ticker {value}.')
+        return None
 
 
 # Press the green button in the gutter to run the script.
@@ -97,22 +98,22 @@ if __name__ == '__main__':
         if inserted:
             performance_dict = find_performance_for_ticker(normalized_word)
 
-            performance_insert_dict = dict(ticker=normalized_word,
-                               open=performance_dict["open"],
-                               close=performance_dict["close"],
-                               timestamp=date)
+            if performance_dict:
+                performance_insert_dict = dict(ticker=normalized_word,
+                                   open=performance_dict["open"],
+                                   close=performance_dict["close"],
+                                   timestamp=date)
 
-            existing = ticker_performance_col.find_one(performance_insert_dict)
+                existing = ticker_performance_col.find_one(performance_insert_dict)
 
-            if not existing:
-                result = ticker_performance_col.insert_one(performance_insert_dict)
-                logging.info(performance_insert_dict)
+                if not existing:
+                    result = ticker_performance_col.insert_one(performance_insert_dict)
+                    logging.info(performance_insert_dict)
 
-            # Simple visualisation with seaborn
-            plt.close()
-            result = [x for x in ticker_col.find({})]
-
-            df = pd.DataFrame(result)
-            ax = sns.histplot(x="timestamp", hue="name", data=df, multiple="dodge", shrink=0.1)
-            plt.show()
+            # Simple visualisation with seaborn - not in use right now
+            # plt.close()
+            # result = [x for x in ticker_col.find({})]
+            # df = pd.DataFrame(result)
+            # ax = sns.histplot(x="timestamp", hue="name", data=df, multiple="dodge", shrink=0.1)
+            # plt.show()
             # End of visualization
